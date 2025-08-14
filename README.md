@@ -1,4 +1,4 @@
-# 现代笔记 - ModerNotes
+# 现代笔记APP
 
 一个使用现代Android开发技术栈构建的记事本应用，采用Material Design 3设计规范，提供流畅的用户体验。
 
@@ -129,41 +129,6 @@ app/src/main/java/com/noteapp/modernotes/
 - 数据库操作使用协程避免阻塞UI线程
 - 图片和资源合理压缩
 
-### 测试建议
-- 单元测试：测试ViewModel和Repository逻辑
-- UI测试：使用Compose测试框架测试界面交互
-- 集成测试：测试数据库操作和导航流程
-
-## 版本历史
-
-### v1.0.0 (当前版本)
-- 基础笔记管理功能
-- Material Design 3 界面
-- 搜索和分类功能
-- 颜色标记支持
-- 批量操作功能
-
-## 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
 ## 贡献指南
 
 欢迎提交Issue和Pull Request来改进这个项目！
-
-### 开发环境设置
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
-
-## 联系方式
-
-如有问题或建议，请通过以下方式联系：
-- 提交 GitHub Issue
-- 发送邮件至开发者
-
----
-
-**现代笔记** - 让记录变得更简单、更美好 ✨

@@ -31,11 +31,11 @@ jobs:
       contents: write
     
     steps:
-    # 1. 检出代码
+    # 检出代码
     - name: Checkout code
       uses: actions/checkout@v4
     
-    # 2. 设置JDK环境
+    # 设置JDK环境
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -43,11 +43,11 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
-    # 3. 设置Android SDK
+    # 设置Android SDK
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
-    # 4. 生成Gradle Wrapper文件
+    # 生成Gradle Wrapper文件
     - name: Generate Gradle Wrapper
       run: |
         echo "📦 检查Gradle Wrapper文件..."
@@ -78,7 +78,7 @@ jobs:
         ls -la gradlew
         
     
-    # 5. 赋予gradlew执行权限
+    # 赋予gradlew执行权限
     - name: Grant execute permission for gradlew
       run: |
         chmod +x gradlew
@@ -88,7 +88,7 @@ jobs:
         echo "🔍 验证Gradle Wrapper..."
         ./gradlew --version
     
-    # 6. 缓存Gradle依赖
+    # 缓存Gradle依赖
     - name: Cache Gradle packages
       uses: actions/cache@v4
       with:
@@ -99,7 +99,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     
-    # 7. 构建APK
+    # 构建APK
     - name: Build APK
       run: |
         if [ "${{ github.event.inputs.build_type }}" = "release" ]; then
@@ -110,7 +110,7 @@ jobs:
           ./gradlew assembleDebug
         fi
     
-    # 8. 获取APK信息
+    # 获取APK信息
     - name: Get APK info
       id: apk_info
       run: |
@@ -130,39 +130,31 @@ jobs:
         echo "apk_size=$APK_SIZE" >> $GITHUB_OUTPUT
         echo "build_type=$BUILD_TYPE" >> $GITHUB_OUTPUT
     
-    # 9. 上传APK文件
+    # 上传APK文件
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.apk_info.outputs.build_type }}-apk-${{ github.run_number }}
         path: ${{ steps.apk_info.outputs.apk_path }}
-        retention-days: 30
+        retention-days: 7
     
-    # 10. 创建Release (如果选择)
+    # 创建Release (如果选择)
     - name: Create Release
       if: ${{ github.event.inputs.create_release == 'true' }}
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.event.inputs.release_tag || format('manual-{0}', github.run_number) }}
-        name: 手动构建 ${{ github.event.inputs.release_tag || format('manual-{0}', github.run_number) }}
+        name: 现代笔记 ${{ github.event.inputs.release_tag || format('manual-{0}', github.run_number) }}
         body: |
-          ## 🔧 手动构建版本
-          
           ### 📱 构建信息
           - **构建类型**: ${{ github.event.inputs.build_type }}
           - **构建时间**: ${{ steps.date.outputs.date }}
           - **APK大小**: ${{ steps.apk_info.outputs.apk_size }}
           - **构建编号**: #${{ github.run_number }}
           
-          ### 📥 安装说明
-          1. 下载APK文件
-          2. 在Android设备上启用"未知来源"安装
-          3. 安装应用
-          
           > 手动构建版本。
         files: ${{ steps.apk_info.outputs.apk_path }}
         draft: false
         prerelease: true
       env:
-
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

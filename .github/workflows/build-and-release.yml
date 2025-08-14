@@ -14,13 +14,13 @@ jobs:
       contents: write
     
     steps:
-    # 1. 检出代码
+    # 检出代码
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # 获取完整的git历史
+        fetch-depth: 0
     
-    # 2. 设置JDK环境
+    # 设置JDK环境
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -28,11 +28,11 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
-    # 3. 设置Android SDK
+    # 设置Android SDK
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
-    # 4. 生成Gradle Wrapper文件
+    # 生成Gradle Wrapper文件
     - name: Generate Gradle Wrapper
       run: |
         echo "📦 检查Gradle Wrapper文件..."
@@ -63,7 +63,7 @@ jobs:
         ls -la gradlew
         
     
-    # 5. 赋予gradlew执行权限
+    # 赋予gradlew执行权限
     - name: Grant execute permission for gradlew
       run: |
         chmod +x gradlew
@@ -73,7 +73,7 @@ jobs:
         echo "🔍 验证Gradle Wrapper..."
         ./gradlew --version
     
-    # 6. 缓存Gradle依赖
+    # 缓存Gradle依赖
     - name: Cache Gradle packages
       uses: actions/cache@v4
       with:
@@ -84,19 +84,19 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     
-    # 7. 构建Debug APK
+    # 构建Debug APK
     - name: Build Debug APK
       run: ./gradlew assembleDebug --stacktrace
     
-    # 8. 上传构建产物
+    # 上传构建产物
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
         path: app/build/outputs/apk/debug/*.apk
-        retention-days: 30
+        retention-days: 7
     
-    # 9. 获取APK文件信息
+    # 获取APK文件信息
     - name: Get APK info
       id: apk_info
       run: |
@@ -107,7 +107,7 @@ jobs:
         echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
         echo "apk_size=$APK_SIZE" >> $GITHUB_OUTPUT
     
-    # 10. 生成版本说明
+    # 生成版本说明
     - name: Generate release notes
       id: release_notes
       run: |
@@ -144,17 +144,9 @@ jobs:
         - Room + SQLite
         - MVVM + Repository 架构
         - Hilt 依赖注入
-        
-        ### 📥 安装说明
-        1. 下载下方的 APK 文件
-        2. 在Android设备上启用"未知来源"安装
-        3. 安装并享受现代化的笔记体验
-        
-        ### 🐛 问题反馈
-        如遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
         EOF
     
-    # 11. 创建GitHub Release
+    # 创建GitHub Release
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
