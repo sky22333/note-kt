@@ -41,10 +41,16 @@ fun NoteEditScreen(
         viewModel.loadNote(noteId)
     }
     
-    // 自动保存逻辑
+    // 自动保存逻辑 - 使用防抖机制
     LaunchedEffect(uiState.title, uiState.content) {
-        if (!uiState.isNewNote && (uiState.title.isNotBlank() || uiState.content.isNotBlank())) {
-            viewModel.autoSave()
+        if (!uiState.isNewNote && !uiState.isSaving && (uiState.title.isNotBlank() || uiState.content.isNotBlank())) {
+            // 防抖延迟，避免频繁保存
+            kotlinx.coroutines.delay(1000) // 1秒延迟
+            
+            // 再次检查状态，确保用户没有继续编辑
+            if (!uiState.isSaving) {
+                viewModel.autoSave()
+            }
         }
     }
     

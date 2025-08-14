@@ -3,7 +3,6 @@ package com.noteapp.modernotes.data.database
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import android.content.Context
 import com.noteapp.modernotes.data.dao.NoteDao
 import com.noteapp.modernotes.data.entity.Note

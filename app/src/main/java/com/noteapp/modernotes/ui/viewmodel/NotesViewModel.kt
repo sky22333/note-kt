@@ -8,6 +8,7 @@ import com.noteapp.modernotes.ui.state.NotesUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import javax.inject.Inject
 
 /**
@@ -27,11 +28,16 @@ class NotesViewModel @Inject constructor(
         loadCategories()
     }
     
+    private var notesJob: Job? = null
+    
     /**
      * 加载笔记列表
      */
     private fun loadNotes() {
-        viewModelScope.launch {
+        // 取消之前的任务
+        notesJob?.cancel()
+        
+        notesJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             
             try {
