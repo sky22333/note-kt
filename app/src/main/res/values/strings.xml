@@ -1,0 +1,68 @@
+<resources>
+    <string name="app_name">现代笔记</string>
+    
+    <!-- 通用 -->
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    <string name="search">搜索</string>
+    <string name="back">返回</string>
+    
+    <!-- 笔记相关 -->
+    <string name="notes">笔记</string>
+    <string name="my_notes">我的笔记</string>
+    <string name="new_note">新建笔记</string>
+    <string name="edit_note">编辑笔记</string>
+    <string name="note_title">标题</string>
+    <string name="note_content">内容</string>
+    <string name="untitled">无标题</string>
+    <string name="start_writing">开始写作...</string>
+    
+    <!-- 搜索和筛选 -->
+    <string name="search_notes">搜索笔记...</string>
+    <string name="no_notes_found">没有找到相关笔记</string>
+    <string name="no_notes_yet">还没有笔记</string>
+    <string name="create_first_note">点击右下角的 + 按钮创建第一个笔记</string>
+    <string name="try_different_keywords">尝试使用其他关键词搜索</string>
+    
+    <!-- 分类 -->
+    <string name="category">分类</string>
+    <string name="all_categories">全部</string>
+    <string name="default_category">默认</string>
+    <string name="select_category">选择分类</string>
+    <string name="set_category">设置分类</string>
+    <string name="category_name">分类名称</string>
+    <string name="clear_filter">清除筛选</string>
+    
+    <!-- 颜色 -->
+    <string name="select_color">选择颜色</string>
+    <string name="white">白色</string>
+    <string name="yellow">黄色</string>
+    <string name="orange">橙色</string>
+    <string name="red">红色</string>
+    <string name="purple">紫色</string>
+    <string name="blue">蓝色</string>
+    <string name="green">绿色</string>
+    <string name="gray">灰色</string>
+    
+    <!-- 操作 -->
+    <string name="create_note">创建笔记</string>
+    <string name="select_all">全选</string>
+    <string name="delete_selected">删除选中</string>
+    <string name="grid_view">网格视图</string>
+    <string name="list_view">列表视图</string>
+    <string name="filter">筛选</string>
+    
+    <!-- 统计 -->
+    <string name="word_count">%d 字</string>
+    <string name="note_count">%d 个笔记</string>
+    
+    <!-- 错误消息 -->
+    <string name="error_loading_notes">加载笔记失败</string>
+    <string name="error_saving_note">保存笔记失败</string>
+    <string name="error_deleting_note">删除笔记失败</string>
+    <string name="error_note_not_found">笔记不存在</string>
+    <string name="error_title_content_empty">标题和内容不能都为空</string>
+</resources>

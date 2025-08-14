@@ -1,0 +1,165 @@
+name: Manual Build
+
+# 手动触发构建
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: '构建类型'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+        - debug
+        - release
+      create_release:
+        description: '是否创建Release'
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: 'Release标签 (如果创建Release)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  manual-build:
+    name: Manual Build APK
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. 检出代码
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # 2. 设置JDK环境
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    # 3. 设置Android SDK
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    # 4. 生成Gradle Wrapper文件
+    - name: Generate Gradle Wrapper
+      run: |
+        echo "📦 检查Gradle Wrapper文件..."
+        
+        # 检查gradle-wrapper.jar是否存在
+        if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+          echo "⬇️ 下载gradle-wrapper.jar..."
+          curl -L -o gradle/wrapper/gradle-wrapper.jar \
+            "https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar"
+          echo "✅ gradle-wrapper.jar下载完成"
+        else
+          echo "✅ gradle-wrapper.jar已存在"
+        fi
+        
+        # 检查gradlew脚本是否存在
+        if [ ! -f "gradlew" ]; then
+          echo "⬇️ 下载gradlew脚本..."
+          curl -L -o gradlew \
+            "https://github.com/gradle/gradle/raw/v8.2.0/gradlew"
+          echo "✅ gradlew脚本下载完成"
+        else
+          echo "✅ gradlew脚本已存在"
+        fi
+        
+        # 验证下载的文件
+        echo "🔍 验证Gradle Wrapper文件..."
+        ls -la gradle/wrapper/gradle-wrapper.jar
+        ls -la gradlew
+        
+    
+    # 5. 赋予gradlew执行权限
+    - name: Grant execute permission for gradlew
+      run: |
+        chmod +x gradlew
+        echo "✅ gradlew执行权限设置完成"
+        
+        # 验证gradlew可执行
+        echo "🔍 验证Gradle Wrapper..."
+        ./gradlew --version
+    
+    # 6. 缓存Gradle依赖
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    # 7. 构建APK
+    - name: Build APK
+      run: |
+        if [ "${{ github.event.inputs.build_type }}" = "release" ]; then
+          echo "构建Release版本..."
+          ./gradlew assembleRelease
+        else
+          echo "构建Debug版本..."
+          ./gradlew assembleDebug
+        fi
+    
+    # 8. 获取APK信息
+    - name: Get APK info
+      id: apk_info
+      run: |
+        if [ "${{ github.event.inputs.build_type }}" = "release" ]; then
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          BUILD_TYPE="release"
+        else
+          APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+          BUILD_TYPE="debug"
+        fi
+        
+        APK_NAME=$(basename "$APK_PATH")
+        APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+        
+        echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+        echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+        echo "apk_size=$APK_SIZE" >> $GITHUB_OUTPUT
+        echo "build_type=$BUILD_TYPE" >> $GITHUB_OUTPUT
+    
+    # 9. 上传APK文件
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.apk_info.outputs.build_type }}-apk-${{ github.run_number }}
+        path: ${{ steps.apk_info.outputs.apk_path }}
+        retention-days: 30
+    
+    # 10. 创建Release (如果选择)
+    - name: Create Release
+      if: ${{ github.event.inputs.create_release == 'true' }}
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.event.inputs.release_tag || format('manual-{0}', github.run_number) }}
+        name: 手动构建 ${{ github.event.inputs.release_tag || format('manual-{0}', github.run_number) }}
+        body: |
+          ## 🔧 手动构建版本
+          
+          ### 📱 构建信息
+          - **构建类型**: ${{ github.event.inputs.build_type }}
+          - **构建时间**: ${{ steps.date.outputs.date }}
+          - **APK大小**: ${{ steps.apk_info.outputs.apk_size }}
+          - **构建编号**: #${{ github.run_number }}
+          
+          ### 📥 安装说明
+          1. 下载APK文件
+          2. 在Android设备上启用"未知来源"安装
+          3. 安装应用
+          
+          > 手动构建版本。
+        files: ${{ steps.apk_info.outputs.apk_path }}
+        draft: false
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

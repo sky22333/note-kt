@@ -1,0 +1,167 @@
+name: Build and Release Android App
+
+# 触发条件：当推送新的tag时触发
+on:
+  push:
+    tags:
+      - 'v*'  # 匹配 v1.0.0, v2.1.0 等格式的tag
+
+jobs:
+  build-and-release:
+    name: Build Debug APK and Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. 检出代码
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整的git历史
+    
+    # 2. 设置JDK环境
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    # 3. 设置Android SDK
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    # 4. 生成Gradle Wrapper文件
+    - name: Generate Gradle Wrapper
+      run: |
+        echo "📦 检查Gradle Wrapper文件..."
+        
+        # 检查gradle-wrapper.jar是否存在
+        if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+          echo "⬇️ 下载gradle-wrapper.jar..."
+          curl -L -o gradle/wrapper/gradle-wrapper.jar \
+            "https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar"
+          echo "✅ gradle-wrapper.jar下载完成"
+        else
+          echo "✅ gradle-wrapper.jar已存在"
+        fi
+        
+        # 检查gradlew脚本是否存在
+        if [ ! -f "gradlew" ]; then
+          echo "⬇️ 下载gradlew脚本..."
+          curl -L -o gradlew \
+            "https://github.com/gradle/gradle/raw/v8.2.0/gradlew"
+          echo "✅ gradlew脚本下载完成"
+        else
+          echo "✅ gradlew脚本已存在"
+        fi
+        
+        # 验证下载的文件
+        echo "🔍 验证Gradle Wrapper文件..."
+        ls -la gradle/wrapper/gradle-wrapper.jar
+        ls -la gradlew
+        
+    
+    # 5. 赋予gradlew执行权限
+    - name: Grant execute permission for gradlew
+      run: |
+        chmod +x gradlew
+        echo "✅ gradlew执行权限设置完成"
+        
+        # 验证gradlew可执行
+        echo "🔍 验证Gradle Wrapper..."
+        ./gradlew --version
+    
+    # 6. 缓存Gradle依赖
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    # 7. 构建Debug APK
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace
+    
+    # 8. 上传构建产物
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk
+        path: app/build/outputs/apk/debug/*.apk
+        retention-days: 30
+    
+    # 9. 获取APK文件信息
+    - name: Get APK info
+      id: apk_info
+      run: |
+        APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+        APK_NAME=$(basename "$APK_PATH")
+        APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+        echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+        echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+        echo "apk_size=$APK_SIZE" >> $GITHUB_OUTPUT
+    
+    # 10. 生成版本说明
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+        
+        # 获取上一个tag
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        # 生成更新日志
+        if [ -n "$PREVIOUS_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s" --max-count=10)
+        fi
+        
+        # 创建发布说明
+        cat > release_notes.md << EOF
+        ## 🚀 现代笔记 $TAG_NAME
+        
+        ### 📱 应用信息
+        - **版本**: $TAG_NAME
+        - **构建时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')
+        - **APK大小**: ${{ steps.apk_info.outputs.apk_size }}
+        - **最低Android版本**: 7.0 (API 24)
+        - **目标Android版本**: 14 (API 34)
+        
+        ### 📋 更新内容
+        $CHANGELOG
+        
+        ### 🔧 技术栈
+        - Kotlin + Jetpack Compose
+        - Material Design 3
+        - Room + SQLite
+        - MVVM + Repository 架构
+        - Hilt 依赖注入
+        
+        ### 📥 安装说明
+        1. 下载下方的 APK 文件
+        2. 在Android设备上启用"未知来源"安装
+        3. 安装并享受现代化的笔记体验
+        
+        ### 🐛 问题反馈
+        如遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
+        EOF
+    
+    # 11. 创建GitHub Release
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.release_notes.outputs.tag_name }}
+        name: 现代笔记 ${{ steps.release_notes.outputs.tag_name }}
+        body_path: release_notes.md
+        files: ${{ steps.apk_info.outputs.apk_path }}
+        draft: false
+        prerelease: false
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
