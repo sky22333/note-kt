@@ -144,12 +144,15 @@ class NoteEditViewModel @Inject constructor(
             try {
                 if (state.isNewNote) {
                     // 创建新笔记
-                    val newNote = repository.createNote(
+                    val newNoteId = repository.createNote(
                         title = finalTitle,
                         content = state.content,
                         category = state.category,
                         color = state.color
                     )
+                    
+                    // 获取新创建的笔记对象
+                    val newNote = repository.getNoteById(newNoteId)
                     
                     // 更新状态，包含新创建的笔记对象
                     _uiState.update { 
@@ -229,12 +232,15 @@ class NoteEditViewModel @Inject constructor(
             try {
                 if (state.isNewNote) {
                     // 创建新笔记
-                    val newNote = repository.createNote(
+                    val newNoteId = repository.createNote(
                         title = finalTitle,
                         content = state.content,
                         category = state.category,
                         color = state.color
                     )
+                    
+                    // 获取新创建的笔记对象
+                    val newNote = repository.getNoteById(newNoteId)
                     
                     // 标记为非新笔记，避免重复创建，并更新笔记对象
                     _uiState.update { 
