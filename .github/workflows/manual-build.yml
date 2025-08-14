@@ -27,6 +27,8 @@ jobs:
   manual-build:
     name: Manual Build APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
     # 1. 检出代码
@@ -162,4 +164,5 @@ jobs:
         draft: false
         prerelease: true
       env:
+
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
