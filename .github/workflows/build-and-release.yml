@@ -10,6 +10,8 @@ jobs:
   build-and-release:
     name: Build Debug APK and Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
     # 1. 检出代码
@@ -164,4 +166,5 @@ jobs:
         prerelease: false
         make_latest: true
       env:
+
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
