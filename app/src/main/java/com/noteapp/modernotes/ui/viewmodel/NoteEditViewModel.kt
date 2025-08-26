@@ -126,7 +126,12 @@ class NoteEditViewModel @Inject constructor(
     fun saveNote(): Boolean {
         val state = _uiState.value
         
-        // 验证输入
+        // 对于新建笔记，如果标题和内容都为空，直接返回true（取消新建）
+        if (state.isNewNote && state.title.isBlank() && state.content.isBlank()) {
+            return true
+        }
+        
+        // 对于编辑现有笔记，验证输入
         if (state.title.isBlank() && state.content.isBlank()) {
             _uiState.update { it.copy(errorMessage = "标题和内容不能都为空") }
             return false
